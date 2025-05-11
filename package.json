@@ -1,6 +1,6 @@
 {
   "name": "jellyplay-electron-client",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Jellyplay Electron Client",
   "main": "dist/main.js",
   "scripts": {
@@ -45,7 +45,8 @@
         "owner": "max-collomb",
         "repo": "jellyplay-client"
       }
-    ],    "win": {
+    ],
+    "win": {
       "target": "nsis",
       "extraResources": [
         "mpv-binaries/windows-x64"
