@@ -1,6 +1,6 @@
 {
   "name": "jellyplay-electron-client",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Jellyplay Electron Client",
   "main": "dist/main.js",
   "scripts": {
