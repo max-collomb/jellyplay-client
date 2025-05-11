@@ -43,7 +43,8 @@
       {
         "provider": "github",
         "owner": "max-collomb",
-        "repo": "jellyplay-client"
+        "repo": "jellyplay-client",
+        "releaseType": "release"
       }
     ],
     "win": {
