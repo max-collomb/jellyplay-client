@@ -129,7 +129,21 @@ async function createWindow(): Promise<void> {
     ? await connectionManager.getOptimalServerUrl()
     : 'http://127.0.0.1:3000/frontend/';
   mainWindow.loadURL(optimalUrl);
-  mainWindow.title = 'Jellyplay Electron client - ' + optimalUrl;
+
+    if (app.isPackaged) {
+      // In a packaged app, resources are in `process.resourcesPath`.
+      // The `extraResources` copies "mpv-binaries/windows-x64" to "resources/windows-x64"
+      ctx.mpvPath = path.join(process.resourcesPath, "mpv-binaries", "windows-x64", "mpv.exe");
+    } else {
+      // In development, __dirname is likely .../project_root/dist or .../project_root/src
+      // path.dirname(__dirname) should then be project_root
+      const projectRoot = path.dirname(__dirname);
+      ctx.mpvPath = path.join(projectRoot, "mpv-binaries", "windows-x64", "mpv.exe");
+    }
+
+
+
+  mainWindow.title = 'Jellyplay Electron client - ' + optimalUrl + ' - ' + ctx.mpvPath + ' - ' + (app.isPackaged ? 'packaged' : 'dev');
   mainWindow.once('ready-to-show', () => mainWindow?.show());
 
   // Gérer les liens externes et les liens mpv://

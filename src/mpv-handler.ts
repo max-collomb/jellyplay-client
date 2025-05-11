@@ -1,6 +1,7 @@
 import { spawn } from 'child_process';
 import * as path from 'path';
 import { MpvApi } from './mpv-api';
+import { ctx } from './context';
 
 export function handleMpvUri(uri: string, basicLogin: string, basicPassword: string, executeJavaScript: (string) => void): Promise<void> {
   const match = uri.match(/mpv([s]{0,1}):\/\/(.*)\?pos=([0-9]*)(&hasSrt)?/);
@@ -13,10 +14,6 @@ export function handleMpvUri(uri: string, basicLogin: string, basicPassword: str
     console.log("url = " + url);
     console.log("position = " + position);
 
-    // Déterminer le chemin de l'exécutable mpv
-    const exeFilePath = path.dirname(__dirname); // le fichier courant est dans le dossier src / dist => on remonte d'un cran
-    const mpvPath = path.join(exeFilePath, "mpv-binaries", "windows-x64", "mpv.exe");
-
     // Préparer les arguments
     const args = [
       url,
@@ -26,12 +23,12 @@ export function handleMpvUri(uri: string, basicLogin: string, basicPassword: str
       "--input-ipc-server=\\\\.\\pipe\\mpvsocket"
     ].filter(arg => arg !== ""); // Supprimer les arguments vides
 
-    console.log(mpvPath + " " + args.join(" "));
-    executeJavaScript(`console.log(${JSON.stringify(mpvPath + " " + args.join(" "))});`);
+    console.log(ctx.mpvPath + " " + args.join(" "));
+    executeJavaScript(`console.log(${JSON.stringify(ctx.mpvPath + " " + args.join(" "))});`);
 
     try {
       // Lancer mpv
-      const proc = spawn(mpvPath, args, {
+      const proc = spawn(ctx.mpvPath, args, {
         // windowsHide: true,
         // stdio: 'ignore'
       });

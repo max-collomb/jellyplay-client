@@ -1,3 +1,7 @@
+# mpv tmp
+mpv-binaries/windows-x64/portable_config/cache/
+mpv-binaries/windows-x64/portable_config/watch_later/
+
 # Dépendances
 node_modules/
 
