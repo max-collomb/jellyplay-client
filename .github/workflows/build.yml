@@ -40,11 +40,11 @@ jobs:
         with:
           # GitHub token, automatically provided to the action
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          
+
           # If the commit is tagged with a version (e.g. "v1.0.0"),
           # release the app after building
           release: ${{ startsWith(github.ref, 'refs/tags/v') }}
-          releaseType: "release"
+          args: '-c.publish.releaseType=release'
           
           # macOS code signing certificate
           # mac_certs: ${{ secrets.MAC_CERTS }}

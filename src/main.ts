@@ -7,6 +7,7 @@ import { handleMpvUri } from './mpv-handler';
 import { ConnectionManager } from './connection-manager';
 import { ctx } from './context';
 import { setupDownloadHandler } from './download-handler';
+import { title } from 'process';
 
 const store = new Store({
   name: 'auth-config',
@@ -143,7 +144,8 @@ async function createWindow(): Promise<void> {
 
 
 
-  mainWindow.title = 'Jellyplay Electron client - ' + optimalUrl + ' - ' + ctx.mpvPath + ' - ' + (app.isPackaged ? 'packaged' : 'dev');
+  mainWindow.title = `Jellyplay Electron client v${app.getVersion()} - ${optimalUrl}`;
+  if (!app.isPackaged) mainWindow.title += ' - unpackaged';
   mainWindow.once('ready-to-show', () => mainWindow?.show());
 
   // Gérer les liens externes et les liens mpv://
