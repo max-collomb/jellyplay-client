@@ -44,13 +44,12 @@ jobs:
           # If the commit is tagged with a version (e.g. "v1.0.0"),
           # release the app after building
           release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+          releaseType: "release"
           
           # macOS code signing certificate
           # mac_certs: ${{ secrets.MAC_CERTS }}
           # mac_certs_password: ${{ secrets.MAC_CERTS_PASSWORD }}
-
-          # Nécessaire pour que electron-builder publie correctement les releases, même si vous ne buildez que pour Windows
-          mac_certs: notarize
+          # mac_certs: notarize
           
           # Windows code signing certificate
           windows_certs: ${{ secrets.WINDOWS_CERTS }}
