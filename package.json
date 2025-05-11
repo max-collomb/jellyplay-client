@@ -1,0 +1,60 @@
+{
+  "name": "jellyplay-electron-client",
+  "version": "1.0.0",
+  "description": "Jellyplay Electron Client",
+  "main": "dist/main.js",
+  "scripts": {
+    "start": "npm run build:ts && electron .",
+    "copy-html": "npx copyfiles -u 1 src/**/*.html dist/",
+    "build:ts": "npm run copy-html && tsc",
+    "watch": "tsc -w",
+    "build": "npm run build:ts && electron-builder",
+    "publish": "npm run build:ts && electron-builder -p always",
+    "release": "npm version patch && git push && git push --tags"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/max-collomb/jellyplay-client.git"
+  },
+  "author": "Votre Nom",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.15.17",
+    "copyfiles": "^2.4.1",
+    "electron": "^36.2.0",
+    "electron-builder": "^26.0.15",
+    "typescript": "^5.8.3"
+  },
+  "@comment/electron-store": "https://stackoverflow.com/a/79537609/1767942",
+  "dependencies": {
+    "axios": "^1.9.0",
+    "electron-store": "v8.2.0",
+    "electron-updater": "^6.6.4",
+    "form-data": "^4.0.2"
+  },
+  "build": {
+    "appId": "com.jellyplay.electronclient",
+    "productName": "Jellyplay-Electron-Client",
+    "icon": "assets/icon.ico",
+    "directories": {
+      "output": "release"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "max-collomb",
+        "repo": "jellyplay-client"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "perMachine": true,
+      "extraResources": [
+        "mpv-binaries/windows-x64"
+      ]
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}

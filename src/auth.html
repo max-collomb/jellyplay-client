@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Configuration de l'authentification</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      padding: 20px;
+      background-color: #000;
+      color: #fff;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background: #0c0d0e;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #bbb;
+    }
+
+    label.radio-label {
+      display: inline-block;
+      margin-bottom: 0;
+      margin-right: 10px;
+    }
+
+    input[type="password"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #333;
+      background-color: #000;
+      color: #fff;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    input[type="password"]:focus-visible {
+      outline: none;
+      border-color: #007bff;
+    }
+
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Identification</h2>
+    <form id="authForm">
+      <div class="form-group">
+        <label for="username">Utilisateur</label>
+        <div>
+          <label class="radio-label"><input type="radio" name="username" value="max" />&nbsp;max</label>
+          <label class="radio-label"><input type="radio" name="username" value="flo" />&nbsp;flo</label>
+          <label class="radio-label"><input type="radio" name="username" value="amélie" />&nbsp;amélie</label>
+          <label class="radio-label"><input type="radio" name="username" value="thomas" />&nbsp;thomas</label>
+          <label class="radio-label"><input type="radio" name="username" value="mjl" />&nbsp;mjl</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="password">Mot de passe</label>
+        <input type="password" id="password" required>
+      </div>
+      <button type="submit">Enregistrer</button>
+    </form>
+  </div>
+  <script>
+    const form = document.getElementById('authForm');
+    window.electronAPI.getAuthConfig().then((auth) => {
+      if (auth) {
+        document.querySelector(`input[name="username"][value="${auth.username}"]`).checked = true;
+        document.getElementById('password').value = auth.password;
+      }
+    });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.querySelector('input[name="username"]:checked').value;
+      const password = document.getElementById('password').value;
+      window.electronAPI.submitAuth({ username, password });
+    });
+
+  </script>
+</body>
+
+</html>
