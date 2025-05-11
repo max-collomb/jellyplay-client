@@ -45,13 +45,14 @@
         "owner": "max-collomb",
         "repo": "jellyplay-client"
       }
-    ],
-    "win": {
+    ],    "win": {
       "target": "nsis",
-      "perMachine": true,
       "extraResources": [
         "mpv-binaries/windows-x64"
       ]
+    },
+    "nsis": {
+      "perMachine": true
     },
     "linux": {
       "target": "AppImage"
