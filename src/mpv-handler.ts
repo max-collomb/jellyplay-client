@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { exec } from 'child_process';
 import * as path from 'path';
 import { MpvApi } from './mpv-api';
 import { ctx } from './context';
@@ -16,30 +16,24 @@ export function handleMpvUri(uri: string, basicLogin: string, basicPassword: str
 
     // Préparer les arguments
     const args = [
-      url,
-      `--http-header-fields=Authorization: Basic ${Buffer.from(basicLogin + ":" + basicPassword).toString('base64')}`,
+      `"${url}"`,
+      `--http-header-fields="Authorization: Basic ${Buffer.from(basicLogin + ":" + basicPassword).toString('base64')}"`,
       (position > -1) ? `--start=${position}` : "",
-      srtUrl ? `--sub-file=${srtUrl}` : "",
+      srtUrl ? `--sub-file="${srtUrl}"` : "",
       "--input-ipc-server=\\\\.\\pipe\\mpvsocket"
     ].filter(arg => arg !== ""); // Supprimer les arguments vides
 
-    console.log(ctx.mpvPath + " " + args.join(" "));
+    console.log("EXEC " + ctx.mpvPath + " " + args.join(" "));
     executeJavaScript(`console.log(${JSON.stringify(ctx.mpvPath + " " + args.join(" "))});`);
 
     try {
       // Lancer mpv
-      const proc = spawn(ctx.mpvPath, args, {
-        // windowsHide: true,
-        // stdio: 'ignore'
-      });
+      const proc = exec(ctx.mpvPath + " " + args.join(" "));
 
       const mpvApi = new MpvApi((position) => {
         // Utilisez le mécanisme approprié pour mettre à jour votre webView
         executeJavaScript(`window._setPosition(${position});`);
       });
-
-      // Démarrer le polling
-      mpvApi.startPolling();
 
       // Attendre que le processus se termine
       return new Promise<void>((resolve) => {
