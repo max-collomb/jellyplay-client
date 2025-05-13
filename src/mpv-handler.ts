@@ -15,7 +15,8 @@ export function handleMpvUri(uri: string, basicLogin: string, basicPassword: str
     console.log("position = " + position);
 
     // Préparer les arguments
-    const args = [
+    const cmd = [
+      `"${ctx.mpvPath}"`,
       `"${url}"`,
       `--http-header-fields="Authorization: Basic ${Buffer.from(basicLogin + ":" + basicPassword).toString('base64')}"`,
       (position > -1) ? `--start=${position}` : "",
@@ -23,12 +24,11 @@ export function handleMpvUri(uri: string, basicLogin: string, basicPassword: str
       "--input-ipc-server=\\\\.\\pipe\\mpvsocket"
     ].filter(arg => arg !== ""); // Supprimer les arguments vides
 
-    console.log("EXEC " + ctx.mpvPath + " " + args.join(" "));
-    executeJavaScript(`console.log(${JSON.stringify(ctx.mpvPath + " " + args.join(" "))});`);
+    executeJavaScript(`console.log(${JSON.stringify(cmd.join(" "))});`);
 
     try {
       // Lancer mpv
-      const proc = exec(ctx.mpvPath + " " + args.join(" "));
+      const proc = exec(cmd.join(" "));
 
       const mpvApi = new MpvApi((position) => {
         // Utilisez le mécanisme approprié pour mettre à jour votre webView
