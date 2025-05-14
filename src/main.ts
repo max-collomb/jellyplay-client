@@ -1,4 +1,4 @@
-import { app, BrowserWindow, session, ipcMain } from 'electron';
+import { app, shell, BrowserWindow, session, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import * as path from 'path';
 import Store from 'electron-store';
@@ -14,6 +14,8 @@ const store = new Store({
   encryptionKey: 'UniqueK3y4Auth',
   clearInvalidConfig: true
 }) as unknown as ElectronStore;
+
+let newVersionPending: string = "";
 
 // Fonction pour obtenir la configuration d'authentification
 async function getAuthConfig(): Promise<AuthConfig | null> {
@@ -72,8 +74,17 @@ let windowConfig: WindowConfig | null = null;
 
 // Vérification des mises à jour
 function checkForUpdates(): void {
-  autoUpdater.checkForUpdatesAndNotify();
+  if (newVersionPending) return;
+  // autoUpdater.updateConfigPath = path.join(__dirname, 'dev-app-update.yml');
+  // autoUpdater.forceDevUpdateConfig = true;
+  // autoUpdater.autoDownload = false
+  // autoUpdater.autoInstallOnAppQuit = false;
+  autoUpdater.checkForUpdates();
 }
+
+ipcMain.handle('check-for-updates', () => checkForUpdates());
+ipcMain.handle('get-new-version', () => newVersionPending);
+ipcMain.handle('update-and-restart', () => autoUpdater.quitAndInstall());
 
 let mainWindow: BrowserWindow | null;
 
@@ -161,6 +172,10 @@ async function createWindow(): Promise<void> {
       event.preventDefault();
       handleJellyplayLink(navigationUrl);
     }
+    if (parsedUrl.protocol === 'browser:') {
+      event.preventDefault();
+      handleBrowserLink(navigationUrl);
+    }
   });
 
   mainWindow.webContents.on('will-frame-navigate', (details) => {
@@ -205,7 +220,15 @@ async function createWindow(): Promise<void> {
 
         // Execute the onloaded script in the iframe context
         if (mainWindow.webContents.mainFrame.frames.length > 0) {
-          mainWindow.webContents.mainFrame.frames[0].executeJavaScript(`eval(${JSON.stringify(onloaded)})`);
+          let hasJquery = await mainWindow.webContents.mainFrame.frames[0].executeJavaScript("typeof $ == 'function'");
+          while (!hasJquery) {
+            console.log('Waiting for jQuery to load in iframe context...', hasJquery, typeof hasJquery);
+            await new Promise(resolve => setTimeout(resolve, 250));
+            hasJquery = await mainWindow.webContents.mainFrame.frames[0].executeJavaScript("typeof $ == 'function'");
+          }
+          if (hasJquery) {
+            mainWindow.webContents.mainFrame.frames[0].executeJavaScript(`eval(${JSON.stringify(onloaded)})`);
+          }
         }
 
         console.log('Frame script executed successfully, upload URL:', uploadUrl);
@@ -264,7 +287,7 @@ function handleMpvLink(mpvUrl: string): void {
   });
 }
 
-// Fonction pour gérer les liens mpv://
+// Fonction pour gérer les liens jellyplay://
 async function handleJellyplayLink(url: string): Promise<void> {
   if (url == 'jellyplay://logform') {
     const newAuthConfig = await showAuthWindow();
@@ -272,6 +295,12 @@ async function handleJellyplayLink(url: string): Promise<void> {
       mainWindow.webContents.reload();
     }
   }
+}
+
+// Fonction pour gérer les liens browser://
+async function handleBrowserLink(url: string): Promise<void> {
+  const decodedUrl = decodeURIComponent(url.substring(10));
+  shell.openExternal(decodedUrl);
 }
 
 // Créer la fenêtre principale lorsque Electron est prêt
@@ -292,28 +321,8 @@ app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
 });
 
-// Configuration des événements pour l'auto-updater
-autoUpdater.on('checking-for-update', () => {
-  console.log('Recherche de mises à jour...');
-});
-
-autoUpdater.on('update-available', (info) => {
-  console.log('Mise à jour disponible:', info);
-});
-
-autoUpdater.on('update-not-available', (info) => {
-  console.log('Pas de mise à jour disponible.');
-});
-
-autoUpdater.on('error', (err) => {
-  console.log('Erreur durant la recherche de mises à jour:', err);
-});
-
-autoUpdater.on('download-progress', (progressObj) => {
-  let logMessage = `Vitesse: ${progressObj.bytesPerSecond} - Téléchargé ${progressObj.percent}%`;
-  console.log(logMessage);
-});
-
 autoUpdater.on('update-downloaded', (info) => {
-  console.log('Mise à jour téléchargée. Elle sera installée au redémarrage.');
+  newVersionPending = info.version;
+  console.log('update-downloaded: ', info);
+  mainWindow.loadFile(path.join(__dirname, 'update.html'));
 });

@@ -8,6 +8,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   submitAuth: (config: { username: string; password: string }) => 
     ipcRenderer.send('submit-auth', config),
   getAuthConfig: () => ipcRenderer.invoke('get-auth-config'),
+  getNewVersion: () => ipcRenderer.invoke('get-new-version'),
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  updateAndRestart: () => ipcRenderer.invoke('update-and-restart'),
 } as ElectronAPI);
 
 // Exposer _mpvSchemeSupported au processus de rendu

@@ -29,6 +29,9 @@ export interface AppEvent {
 export interface ElectronAPI {
   getAuthConfig: () => Promise<AuthConfig | null>;
   submitAuth: (config: AuthConfig) => void;
+  getNewVersion: () => Promise<string>;
+  checkForUpdates: () => void;
+  updateAndRestart: () => void;
 }
 
 export interface ElectronStore {

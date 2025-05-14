@@ -2,5 +2,8 @@
 [x] En cas d'erreur 401, ouvrir automatiquement la fenêtre d'authentification
 [x] Gestion des téléchargements de torrents
 [x] build : inclure mpv dans le package
-[ ] build : incrémenter automatiquement le numéro de version
-[ ] mise à jour auto : build avec github-actions
+[x] build : incrémenter automatiquement le numéro de version
+[x] mise à jour auto : build avec github-actions
+[x] bug : iframe cloudflare charge en boucle
+[x] gérer les liens browser://
+[x] afficher la dispo de màj dans l'UI
