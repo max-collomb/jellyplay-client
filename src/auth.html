@@ -96,7 +96,7 @@
   </div>
   <script>
     const form = document.getElementById('authForm');
-    window.electronAPI.getAuthConfig().then((auth) => {
+    window.electronAPI.getAuth().then((auth) => {
       if (auth) {
         document.querySelector(`input[name="username"][value="${auth.username}"]`).checked = true;
         document.getElementById('password').value = auth.password;

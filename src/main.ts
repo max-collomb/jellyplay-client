@@ -1,328 +1,62 @@
-import { app, shell, BrowserWindow, session, ipcMain } from 'electron';
-import { autoUpdater } from 'electron-updater';
+import { app, ipcMain } from 'electron';
 import * as path from 'path';
-import Store from 'electron-store';
-import { AuthConfig, ElectronStore, WindowConfig } from './types';
-import { handleMpvUri } from './mpv-handler';
-import { ConnectionManager } from './connection-manager';
+
 import { ctx } from './context';
+import { createWindow } from './main-window';
+import { setupAutoUpdater, checkForUpdates, getPendingVersion, updateAndRestart } from './auto-updater';
+import { ConnectionManager } from './connection-manager';
 import { setupDownloadHandler } from './download-handler';
-import { title } from 'process';
-
-const store = new Store({
-  name: 'auth-config',
-  encryptionKey: 'UniqueK3y4Auth',
-  clearInvalidConfig: true
-}) as unknown as ElectronStore;
-
-let newVersionPending: string = "";
-
-// Fonction pour obtenir la configuration d'authentification
-async function getAuthConfig(): Promise<AuthConfig | null> {
-  let storedConfig = store.get('authConfig') as AuthConfig | null;
-  
-  if (!storedConfig) {
-    // Créer une fenêtre de dialogue personnalisée pour la configuration
-    storedConfig = await showAuthWindow();
-  }
-  ctx.basicLogin = storedConfig.username;
-  ctx.basicPassword = storedConfig.password;
-
-  return storedConfig;
-}
-
-async function showAuthWindow(): Promise<AuthConfig> {
-  const authWindow = new BrowserWindow({
-    width: 500,
-    height: 400,
-    icon: path.join(__dirname, '..', 'assets', 'icon.ico'),
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
-    },
-    parent: BrowserWindow.getAllWindows()[0],
-    modal: true,
-    show: true
-  });
-  authWindow.removeMenu();
-
-  await authWindow.loadFile(path.join(__dirname, 'auth.html'));
-  authWindow.webContents.on('did-finish-load', () => {
-    authWindow.webContents.send('load-auth-config', store.get('authConfig'));
-  });
-  return new Promise((resolve) => {
-    ipcMain.once('submit-auth', (_event, config: AuthConfig) => {
-      store.set('authConfig', config);
-      authConfig = config;
-      ctx.basicLogin = config.username;
-      ctx.basicPassword = config.password;
-      authWindow.close();
-      resolve(config);
-    });
-  });
-}
-
-ipcMain.handle('get-auth-config', async () => {
-  const storedConfig = store.get('authConfig') as AuthConfig | null;
-  return storedConfig;
-});
-
-// Variable globale pour la configuration d'authentification
-let authConfig: AuthConfig | null = null;
-let windowConfig: WindowConfig | null = null;
-
-// Vérification des mises à jour
-function checkForUpdates(): void {
-  if (newVersionPending) return;
-  // autoUpdater.updateConfigPath = path.join(__dirname, 'dev-app-update.yml');
-  // autoUpdater.forceDevUpdateConfig = true;
-  // autoUpdater.autoDownload = false
-  // autoUpdater.autoInstallOnAppQuit = false;
-  autoUpdater.checkForUpdates();
-}
-
-ipcMain.handle('check-for-updates', () => checkForUpdates());
-ipcMain.handle('get-new-version', () => newVersionPending);
-ipcMain.handle('update-and-restart', () => autoUpdater.quitAndInstall());
-
-let mainWindow: BrowserWindow | null;
-
-async function createWindow(): Promise<void> {
-  // Obtenir la configuration d'authentification
-  authConfig = await getAuthConfig();
-  if (!authConfig) return;
-
-  // Obtenir la configuration de la fenêtre
-  windowConfig = store.get('windowConfig');
-
-  // Créer la fenêtre du navigateur
-  mainWindow = new BrowserWindow({
-    width: windowConfig?.width || 1200,
-    height: windowConfig?.height || 800,
-    x: windowConfig?.x,
-    y: windowConfig?.y,
-    backgroundColor: '#0c0d0e',
-    show: false,
-    icon: path.join(__dirname, '..', 'assets', 'icon.ico'),
-    title: 'Jellyplay Electron client',
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'),
-    },
-  });
-
-  if (windowConfig?.isMaximized) {
-    mainWindow.maximize();
-  }
-
-  mainWindow.removeMenu();
-  // Intercepter les requêtes pour ajouter l'authentification HTTP basique
-  session.defaultSession.webRequest.onBeforeSendHeaders(
-    { urls: ['http://127.0.0.1:3000/*', 'http://192.168.0.99:3000/*', 'http://nas.colors.ovh:3000/*', 'https://jellyplay.synology.me:37230/*'] },
-    (details, callback) => {
-      if (!authConfig) {
-        callback({ cancel: true });
-        return;
-      }
-      const authCredentials = Buffer.from(`${authConfig.username}:${authConfig.password}`).toString('base64');
-      details.requestHeaders['Authorization'] = `Basic ${authCredentials}`;
-      callback({ requestHeaders: details.requestHeaders });
-    }
-  );
-
-  // Attend que la page soit chargée pour éviter un clignotement avec une page blanche
-  var connectionManager = new ConnectionManager(
-    "http://192.168.0.99:3000/frontend/", // localAddress
-    "https://jellyplay.synology.me:37230/frontend/" // publicAddress
-  );
-  const optimalUrl = app.isPackaged
-    ? await connectionManager.getOptimalServerUrl()
-    : 'http://127.0.0.1:3000/frontend/';
-  mainWindow.loadURL(optimalUrl);
-
-    if (app.isPackaged) {
-      // In a packaged app, resources are in `process.resourcesPath`.
-      // The `extraResources` copies "mpv-binaries/windows-x64" to "resources/windows-x64"
-      ctx.mpvPath = path.join(process.resourcesPath, "mpv-binaries", "windows-x64", "mpv.exe");
-    } else {
-      // In development, __dirname is likely .../project_root/dist or .../project_root/src
-      // path.dirname(__dirname) should then be project_root
-      const projectRoot = path.dirname(__dirname);
-      ctx.mpvPath = path.join(projectRoot, "mpv-binaries", "windows-x64", "mpv.exe");
-    }
+import { setupBasicAuthHeaders } from './basic-auth-headers';
+import { loadAuthConfig } from './auth';
+import { setupFrameHandler } from './frame-handler';
+import { setupCode401Handler } from './code-401-handler';
+import { setupWindowStatePersistence } from './window-state-persistence';
+import { setupProtocolsHandler } from './protocols-handler';
 
 
+ipcMain.handle('get-auth', () => ctx.auth);
+ipcMain.handle('check-for-updates', checkForUpdates);
+ipcMain.handle('get-pending-version', getPendingVersion)
+ipcMain.handle('update-and-restart', updateAndRestart);
 
-  mainWindow.title = `Jellyplay Electron client v${app.getVersion()} - ${optimalUrl}`;
-  if (!app.isPackaged) mainWindow.title += ' - unpackaged';
-  mainWindow.once('ready-to-show', () => mainWindow?.show());
+const urls = [
+  'http://127.0.0.1:3000/*',
+  'http://192.168.0.99:3000/*',
+  'http://nas.colors.ovh:3000/*',
+  'https://jellyplay.synology.me:37230/*'];
+const connectionManager = new ConnectionManager(
+  "http://192.168.0.99:3000/frontend/", // localAddress
+  "https://jellyplay.synology.me:37230/frontend/" // publicAddress
+);
 
-  // Gérer les liens externes et les liens mpv://
-  mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
-    const parsedUrl = new URL(navigationUrl);
-
-    // Intercepter les liens mpv://
-    if (parsedUrl.protocol === 'mpv:') {
-      event.preventDefault();
-      handleMpvLink(navigationUrl);
-    }
-    if (parsedUrl.protocol === 'jellyplay:') {
-      event.preventDefault();
-      handleJellyplayLink(navigationUrl);
-    }
-    if (parsedUrl.protocol === 'browser:') {
-      event.preventDefault();
-      handleBrowserLink(navigationUrl);
-    }
-  });
-
-  mainWindow.webContents.on('will-frame-navigate', (details) => {
-    console.log('Frame navigation starting: ' + details.url);
-    // Autorisation d'affichage en iframe
-    if (!details.isMainFrame) {
-      session.defaultSession.webRequest.onHeadersReceived((headersDetails, callback) => {
-        const responseHeaders = { ...headersDetails.responseHeaders };
-        responseHeaders['Content-Security-Policy'] = ["frame-ancestors 'self' *"];
-
-        callback({ responseHeaders });
-      });
-    }
-  });
-
-  mainWindow.webContents.on('did-navigate', async (_event, _url, httpResponseCode) => {
-    if (httpResponseCode === 200) {
-      mainWindow?.webContents.executeJavaScript(`window._mpvSchemeSupported = true;`);
-    } else if (httpResponseCode === 401) {
-      const newAuthConfig = await showAuthWindow();
-      if (newAuthConfig) {
-        mainWindow?.webContents.reload();
-      }
-    }
-  });
-
-  mainWindow.webContents.on('did-frame-finish-load', async (_event, isMainFrame) => {
-    try {
-      if (!isMainFrame) {
-        // Get the onloaded script from data attribute
-        const onloaded = await mainWindow.webContents.executeJavaScript(
-          `document.querySelector('iframe').dataset.onloaded`
-        );
-
-        // Get and process the upload URL
-        const uploadUrl = await mainWindow.webContents.executeJavaScript(
-          `new URL(document.querySelector('iframe').dataset.uploadurl, document.baseURI).href`
-        );
-
-        // Store the uploadUrl for later use (depending on your application's needs)
-        ctx.uploadUrl = uploadUrl;
-
-        // Execute the onloaded script in the iframe context
-        if (mainWindow.webContents.mainFrame.frames.length > 0) {
-          let hasJquery = await mainWindow.webContents.mainFrame.frames[0].executeJavaScript("typeof $ == 'function'");
-          while (!hasJquery) {
-            console.log('Waiting for jQuery to load in iframe context...', hasJquery, typeof hasJquery);
-            await new Promise(resolve => setTimeout(resolve, 250));
-            hasJquery = await mainWindow.webContents.mainFrame.frames[0].executeJavaScript("typeof $ == 'function'");
-          }
-          if (hasJquery) {
-            mainWindow.webContents.mainFrame.frames[0].executeJavaScript(`eval(${JSON.stringify(onloaded)})`);
-          }
-        }
-
-        console.log('Frame script executed successfully, upload URL:', uploadUrl);
-      }
-    } catch (error) {
-      console.error('Error in frame navigation completion:', error);
-    }
-  });
-
-  setupDownloadHandler(mainWindow);
-
-  // Ouvrir les DevTools en développement
-  if (!app.isPackaged) {
-    mainWindow.webContents.openDevTools();
-  }
-
-  // Événement de fermeture de la fenêtre
-  mainWindow.on('closed', function () {
-    mainWindow = null;
-  });
-
-  const onResizeOrMove = () => {
-    if (mainWindow && windowConfig) {
-      if (mainWindow.isMaximized()) {
-        windowConfig = { ...windowConfig, isMaximized: true };
-      } else {
-        windowConfig = { ...mainWindow.getBounds(), isMaximized: false };
-      }
-    }
-  };
-
-  mainWindow.on('resize', onResizeOrMove);
-
-  mainWindow.on('move', onResizeOrMove);
-
-  // Sauvegarder la configuration de la fenêtre avant la fermeture
-  mainWindow.on('close', () => {
-    if (windowConfig) {
-      store.set('windowConfig', windowConfig);
-    }
-  });
-
-  // Ajouter le raccourci F12 pour ouvrir les DevTools
-  mainWindow.webContents.on('before-input-event', (event, input) => {
-    if (input.key === 'F12') {
-      mainWindow?.webContents.toggleDevTools();
-      event.preventDefault();
-    }
-  });
-}
-
-// Fonction pour gérer les liens mpv://
-function handleMpvLink(mpvUrl: string): void {
-  handleMpvUri(mpvUrl, authConfig?.username || '', authConfig?.password || '', (command: string) => {
-    mainWindow?.webContents.executeJavaScript(command);
-  });
-}
-
-// Fonction pour gérer les liens jellyplay://
-async function handleJellyplayLink(url: string): Promise<void> {
-  if (url == 'jellyplay://logform') {
-    const newAuthConfig = await showAuthWindow();
-    if (newAuthConfig) {
-      mainWindow.webContents.reload();
-    }
-  }
-}
-
-// Fonction pour gérer les liens browser://
-async function handleBrowserLink(url: string): Promise<void> {
-  const decodedUrl = decodeURIComponent(url.substring(10));
-  shell.openExternal(decodedUrl);
+if (app.isPackaged) {
+  // In a packaged app, resources are in `process.resourcesPath`. The `extraResources` copies "mpv-binaries/windows-x64" to "resources/windows-x64"
+  ctx.mpvPath = path.join(process.resourcesPath, "mpv-binaries", "windows-x64", "mpv.exe");
+} else {
+  // In development, __dirname is likely .../project_root/dist or .../project_root/src. path.dirname(__dirname) should then be project_root
+  const projectRoot = path.dirname(__dirname);
+  ctx.mpvPath = path.join(projectRoot, "mpv-binaries", "windows-x64", "mpv.exe");
 }
 
 // Créer la fenêtre principale lorsque Electron est prêt
 app.whenReady().then(async () => {
-  await createWindow();
-  checkForUpdates();
+  // Si pas d'authentification, on quitte immédiatement
+  await loadAuthConfig();
+  if (!ctx.auth) return;
 
-  // Vérifier les mises à jour toutes les heures
-  setInterval(checkForUpdates, 3600000);
+  const url = app.isPackaged ? await connectionManager.getOptimalServerUrl() : 'http://127.0.0.1:3000/frontend/';
+  const mainWindow = await createWindow(url);
+  setupWindowStatePersistence(mainWindow);
+  setupProtocolsHandler(mainWindow);
+  setupDownloadHandler(mainWindow);
+  setupFrameHandler(mainWindow);
+  setupCode401Handler(mainWindow);
+  setupAutoUpdater(mainWindow);
+  setupBasicAuthHeaders(urls);
 
-  app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
-});
-
-// Quitter quand toutes les fenêtres sont fermées, sauf sur macOS
-app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') app.quit();
-});
-
-autoUpdater.on('update-downloaded', (info) => {
-  newVersionPending = info.version;
-  console.log('update-downloaded: ', info);
-  mainWindow.loadFile(path.join(__dirname, 'update.html'));
+  // mode debug
+  if (!app.isPackaged) {
+    mainWindow.title += ' - unpackaged';
+    mainWindow.webContents.openDevTools();
+  }  
 });

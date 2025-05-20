@@ -7,3 +7,5 @@
 [x] bug : iframe cloudflare charge en boucle
 [x] gérer les liens browser://
 [x] afficher la dispo de màj dans l'UI
+[ ] optimiser le header `Basic` (ne pas réencoder en base64 à chaque requête)
+[ ] les URLs devraient être configurables

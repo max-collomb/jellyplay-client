@@ -1,4 +1,4 @@
-import { app, session, dialog } from 'electron';
+import { app, BrowserWindow, session, dialog } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 import axios from 'axios';
@@ -10,7 +10,7 @@ import { ctx } from './context';
  * Configure le gestionnaire de téléchargement pour Electron
  * @param mainWindow La fenêtre principale de l'application
  */
-export function setupDownloadHandler(mainWindow: Electron.BrowserWindow): void {
+export function setupDownloadHandler(mainWindow: BrowserWindow): void {
   // Configurer le gestionnaire de téléchargement
   session.defaultSession.on('will-download', (event, item, _webContents) => {
     // Set the save path, making Electron not to prompt a save dialog.
@@ -36,7 +36,7 @@ export function setupDownloadHandler(mainWindow: Electron.BrowserWindow): void {
           });
 
           // Configurer les en-têtes avec l'authentification Basic
-          const authHeader = Buffer.from(`${ctx.basicLogin}:${ctx.basicPassword}`).toString('base64');
+          const authHeader = Buffer.from(`${ctx.auth.username}:${ctx.auth.password}`).toString('base64');
 
           // Envoyer le fichier au serveur
           const response = await axios.post(ctx.uploadUrl, formData, {

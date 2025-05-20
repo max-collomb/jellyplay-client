@@ -48,7 +48,7 @@
   </div>
   <script>
     const form = document.getElementById('authForm');
-    window.electronAPI.getNewVersion().then((version) => {
+    window.electronAPI.getPendingVersion().then((version) => {
       document.getElementById('version').innerText = version;
     });
     document.getElementById('update-button').addEventListener('click', (e) => {
