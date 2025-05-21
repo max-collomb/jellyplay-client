@@ -10,7 +10,7 @@ export function setupProtocolsHandler(mainWindow: BrowserWindow): void {
   mainWindow.webContents.on('will-navigate', async (event, navigationUrl) => {
     const parsedUrl = new URL(navigationUrl);
 
-    if (parsedUrl.protocol === 'mpv:') {
+    if (parsedUrl.protocol === 'mpv:' || parsedUrl.protocol === 'mpvs:') {
       event.preventDefault();
       handleMpvUri(navigationUrl, ctx.auth.username, ctx.auth.password, (command: string) => {
         mainWindow?.webContents.executeJavaScript(command);
