@@ -1,8 +1,8 @@
 import * as path from 'path';
-import { BrowserWindow } from "electron";
+import { BrowserWindow } from 'electron';
 import { autoUpdater } from 'electron-updater';
 
-let newVersionPending: string = "";
+let newVersionPending: string = '';
 
 export function checkForUpdates(): void {
   if (newVersionPending) return;
@@ -13,7 +13,7 @@ export function checkForUpdates(): void {
   autoUpdater.checkForUpdates();
 }
 
-export function setupAutoUpdater(mainWindow: BrowserWindow): void {  
+export function setupAutoUpdater(mainWindow: BrowserWindow): void {
   autoUpdater.on('update-downloaded', (info) => {
     newVersionPending = info.version;
     console.log('update-downloaded: ', info);

@@ -1,4 +1,4 @@
-import { Auth, WindowState } from "./types";
+import { Auth, WindowState } from './types';
 
 type Context = {
   auth: Auth;
@@ -10,7 +10,7 @@ type Context = {
 export const ctx: Context = {
   auth: {
     username: '',
-    password: ''
+    password: '',
   },
   windowState: {
     x: 0,

@@ -1,6 +1,6 @@
 export class ConnectionManager {
-  private _localAddress: string;
-  private _publicAddress: string;
+  private readonly _localAddress: string;
+  private readonly _publicAddress: string;
 
   constructor(localAddress: string, publicAddress: string) {
     this._localAddress = localAddress;
@@ -16,12 +16,7 @@ export class ConnectionManager {
 
   private async isServerReachable(url: string): Promise<boolean> {
     try {
-      const uri = new URL(url);
-      const host = uri.hostname;
-      const port = uri.port ? parseInt(uri.port) : (uri.protocol === 'https:' ? 443 : 80);
-
-      // En TypeScript/JavaScript, nous n'avons pas d'équivalent direct pour TcpClient
-      // Nous utilisons donc un fetch avec un AbortController pour gérer le timeout
+      // utilisation d'un AbortController pour gérer le timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 seconde timeout
 
@@ -29,7 +24,7 @@ export class ConnectionManager {
         // Tentative de connexion
         await fetch(url, {
           method: 'HEAD',
-          signal: controller.signal
+          signal: controller.signal,
         });
 
         // Si on arrive ici, la connexion a réussi

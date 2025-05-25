@@ -1,36 +1,36 @@
 import { exec } from 'child_process';
-import * as path from 'path';
 import { MpvApi } from './mpv-api';
 import { ctx } from './context';
 
-export function handleMpvUri(uri: string, basicLogin: string, basicPassword: string, executeJavaScript: (string) => void): Promise<void> {
-  const match = uri.match(/mpv([s]{0,1}):\/\/(.*)\?pos=([0-9]*)(&hasSrt)?/);
+export function handleMpvUri(uri: string, basicLogin: string, basicPassword: string, executeJavaScript: (js: string) => void): Promise<void> {
+  const regex = /mpv(s?):\/\/(.*)\?pos=(\d*)(&hasSrt)?/;
+  const match = regex.exec(uri);
 
   if (match) {
-    const url = "http" + match[1] + "://" + match[2];
+    const url = 'http' + match[1] + '://' + match[2];
     const position = match[3].length > 0 ? parseInt(match[3], 10) : -1;
-    const srtUrl = match[4]?.length > 0 ? url + ".srt" : "";
+    const srtUrl = match[4]?.length > 0 ? url + '.srt' : '';
 
-    console.log("url = " + url);
-    console.log("position = " + position);
+    console.log('url = ' + url);
+    console.log('position = ' + position);
 
     // Préparer les arguments
     const cmd = [
       `"${ctx.mpvPath}"`,
       `"${url}"`,
-      `--http-header-fields="Authorization: Basic ${Buffer.from(basicLogin + ":" + basicPassword).toString('base64')}"`,
-      (position > -1) ? `--start=${position}` : "",
-      srtUrl ? `--sub-file="${srtUrl}"` : "",
-      "--input-ipc-server=\\\\.\\pipe\\mpvsocket"
-    ].filter(arg => arg !== ""); // Supprimer les arguments vides
+      `--http-header-fields="Authorization: Basic ${Buffer.from(basicLogin + ':' + basicPassword).toString('base64')}"`,
+      position > -1 ? `--start=${position}` : '',
+      srtUrl ? `--sub-file="${srtUrl}"` : '',
+      '--input-ipc-server=\\\\.\\pipe\\mpvsocket',
+    ].filter((arg) => arg !== ''); // Supprimer les arguments vides
 
-    executeJavaScript(`console.log(${JSON.stringify(cmd.join(" "))});`);
+    executeJavaScript(`console.log(${JSON.stringify(cmd.join(' '))});`);
 
     try {
       // Lancer mpv
-      const proc = exec(cmd.join(" "));
+      const proc = exec(cmd.join(' '));
 
-      const mpvApi = new MpvApi((position) => {
+      new MpvApi((position) => {
         // Utilisez le mécanisme approprié pour mettre à jour votre webView
         executeJavaScript(`window._setPosition(${position});`);
       });
@@ -43,7 +43,7 @@ export function handleMpvUri(uri: string, basicLogin: string, basicPassword: str
         });
       });
     } catch (error) {
-      console.error("Error spawning mpv:", error);
+      console.error('Error spawning mpv:', error);
     }
   }
 }

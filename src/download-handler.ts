@@ -5,14 +5,13 @@ import axios from 'axios';
 import FormData from 'form-data';
 import { ctx } from './context';
 
-
 /**
  * Configure le gestionnaire de téléchargement pour Electron
  * @param mainWindow La fenêtre principale de l'application
  */
 export function setupDownloadHandler(mainWindow: BrowserWindow): void {
   // Configurer le gestionnaire de téléchargement
-  session.defaultSession.on('will-download', (event, item, _webContents) => {
+  session.defaultSession.on('will-download', (_event, item) => {
     // Set the save path, making Electron not to prompt a save dialog.
     const filePath = path.join(app.getPath('temp'), item.getFilename());
 
@@ -20,7 +19,7 @@ export function setupDownloadHandler(mainWindow: BrowserWindow): void {
     item.setSavePath(filePath);
 
     // Gestionnaire d'événement pour la fin du téléchargement
-    item.once('done', async (event, state) => {
+    item.once('done', async (_event, state) => {
       if (state === 'completed' && filePath.toLowerCase().endsWith('.torrent') && ctx.uploadUrl) {
         console.log('Téléchargement complété: ' + filePath);
 
@@ -32,7 +31,7 @@ export function setupDownloadHandler(mainWindow: BrowserWindow): void {
           const formData = new FormData();
           formData.append('file', fileBytes, {
             filename: path.basename(filePath),
-            contentType: 'application/x-bittorrent'
+            contentType: 'application/x-bittorrent',
           });
 
           // Configurer les en-têtes avec l'authentification Basic
@@ -42,8 +41,8 @@ export function setupDownloadHandler(mainWindow: BrowserWindow): void {
           const response = await axios.post(ctx.uploadUrl, formData, {
             headers: {
               ...formData.getHeaders(),
-              'Authorization': `Basic ${authHeader}`
-            }
+              Authorization: `Basic ${authHeader}`,
+            },
           });
 
           // Supprimer le fichier temporaire
@@ -54,13 +53,13 @@ export function setupDownloadHandler(mainWindow: BrowserWindow): void {
             dialog.showMessageBox(mainWindow, {
               type: 'info',
               title: 'Téléchargement',
-              message: 'Téléchargement en cours dur la SeedBox...\nAller dans l\'onglet "Téléchargements" pour suivre la progression'
+              message: 'Téléchargement en cours dur la SeedBox...\nAller dans l\'onglet "Téléchargements" pour suivre la progression',
             });
           } else {
             dialog.showMessageBox(mainWindow, {
               type: 'error',
               title: 'Erreur',
-              message: `Erreur du téléchargement. Code: ${response.status}`
+              message: `Erreur du téléchargement. Code: ${response.status}`,
             });
           }
         } catch (error) {
@@ -68,7 +67,7 @@ export function setupDownloadHandler(mainWindow: BrowserWindow): void {
           dialog.showMessageBox(mainWindow, {
             type: 'error',
             title: 'Erreur',
-            message: `Erreur lors de l'envoi du fichier: ${error.message}`
+            message: `Erreur lors de l'envoi du fichier: ${error.message}`,
           });
 
           // Supprimer le fichier en cas d'erreur

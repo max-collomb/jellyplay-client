@@ -5,7 +5,6 @@ import { ctx } from './context';
 import { showAuthWindow } from './auth';
 
 export function setupProtocolsHandler(mainWindow: BrowserWindow): void {
-
   // Gestion des différents protocoles mpv://, jellyplay:// et browser://
   mainWindow.webContents.on('will-navigate', async (event, navigationUrl) => {
     const parsedUrl = new URL(navigationUrl);

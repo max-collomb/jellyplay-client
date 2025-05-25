@@ -6,14 +6,13 @@ import { ctx } from './context';
 
 // Récupération de la configuration d'authentification : depuis secureStore ou via une fenêtre de dialogue
 export async function loadAuthConfig(): Promise<void> {
-  let storedConfig = secureStore.get('auth') as Auth | null;
+  let storedConfig = secureStore.get('auth');
 
   if (!storedConfig) {
     // Créer une fenêtre de dialogue personnalisée pour la configuration
     storedConfig = await showAuthWindow();
   }
-  ctx.auth = storedConfig
-
+  ctx.auth = storedConfig;
 }
 
 export async function showAuthWindow(): Promise<Auth> {
@@ -25,17 +24,17 @@ export async function showAuthWindow(): Promise<Auth> {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
     },
     parent: BrowserWindow.getAllWindows()[0],
     modal: true,
-    show: true
+    show: true,
   });
   authWindow.removeMenu();
 
   // Chargement du fichier HTML de la fenêtre d'authentification
   await authWindow.loadFile(path.join(__dirname, 'auth.html'));
-  
+
   // Gestion de la fermeture de la fenêtre
   return new Promise((resolve) => {
     ipcMain.once('submit-auth', (_event, config: Auth) => {

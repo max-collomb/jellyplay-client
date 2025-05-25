@@ -1,6 +1,6 @@
-import { BrowserWindow } from "electron";
-import { ctx } from "./context";
-import { secureStore } from "./secure-store";
+import { BrowserWindow } from 'electron';
+import { ctx } from './context';
+import { secureStore } from './secure-store';
 
 export function setupWindowStatePersistence(mainWindow: BrowserWindow): void {
   const onResizeOrMove = () => {
@@ -17,5 +17,5 @@ export function setupWindowStatePersistence(mainWindow: BrowserWindow): void {
   // Sauvegarder la configuration de la fenêtre avant la fermeture
   mainWindow.on('close', () => {
     secureStore.set('windowState', ctx.windowState);
-  }); 
+  });
 }

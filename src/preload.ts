@@ -5,9 +5,9 @@ import { ElectronAPI } from './types';
 contextBridge.exposeInMainWorld('electronAPI', {
   submitAuth: (config: { username: string; password: string }) => ipcRenderer.send('submit-auth', config),
   getAuth: () => ipcRenderer.invoke('get-auth'),
-  getPendingVersion: () => ipcRenderer.invoke('get-pending-version'),
-  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
-  updateAndRestart: () => ipcRenderer.invoke('update-and-restart'),
+  getPendingVersion: () => { return ipcRenderer.invoke('get-pending-version'); },
+  checkForUpdates: () => { ipcRenderer.invoke('check-for-updates'); },
+  updateAndRestart: () => { ipcRenderer.invoke('update-and-restart'); },
 } as ElectronAPI);
 
 // Expose _mpvSchemeSupported au processus de rendu

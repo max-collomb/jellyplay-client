@@ -1,4 +1,4 @@
-import { BrowserWindow } from "electron";
+import { BrowserWindow } from 'electron';
 import { showAuthWindow } from './auth';
 
 export function setupCode401Handler(mainWindow: BrowserWindow): void {
