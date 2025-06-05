@@ -39,7 +39,9 @@ app.whenReady().then(async () => {
   await loadAuthConfig();
   if (!ctx.auth) return;
 
-  const url = app.isPackaged ? await connectionManager.getOptimalServerUrl() : 'http://127.0.0.1:3000/frontend/';
+  const url = app.isPackaged
+    ? /*await connectionManager.getOptimalServerUrl()*/ 'https://jellyplay.synology.me:37230/frontend/'
+    : 'http://127.0.0.1:3000/frontend/';
   const mainWindow = await createWindow(url);
   setupWindowStatePersistence(mainWindow);
   setupProtocolsHandler(mainWindow);
