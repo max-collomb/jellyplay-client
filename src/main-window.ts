@@ -8,7 +8,6 @@ export async function createWindow(url: string): Promise<BrowserWindow> {
   // Obtenir la configuration de la fenêtre
   ctx.windowState = secureStore.get('windowState');
 
-  console.log('ctx: ', ctx);
   // Préparation de la fenêtre principale
   const mainWindow = new BrowserWindow({
     width: ctx.windowState?.width || 1200,
