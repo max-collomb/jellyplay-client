@@ -2,11 +2,18 @@ import { exec } from 'child_process';
 import { MpvApi } from './mpv-api';
 import { ctx } from './context';
 
+let isMpvRunning = false;
+
 export function handleMpvUri(uri: string, basicLogin: string, basicPassword: string, executeJavaScript: (js: string) => void): Promise<void> {
   const regex = /mpv(s?):\/\/(.*)\?pos=(\d*)(&hasSrt)?/;
   const match = regex.exec(uri);
 
   if (match) {
+    if (isMpvRunning) {
+      executeJavaScript('window._playerAlreadyRunning(); console.log("MPV is already launched");');
+      return Promise.resolve();
+    }
+
     const url = 'http' + match[1] + '://' + match[2];
     const position = match[3].length > 0 ? parseInt(match[3], 10) : -1;
     const srtUrl = match[4]?.length > 0 ? url + '.srt' : '';
@@ -29,6 +36,7 @@ export function handleMpvUri(uri: string, basicLogin: string, basicPassword: str
     try {
       // Lancer mpv
       const proc = exec(cmd.join(' '));
+      isMpvRunning = true;
 
       new MpvApi((position) => {
         // Utilisez le mécanisme approprié pour mettre à jour votre webView
@@ -38,12 +46,14 @@ export function handleMpvUri(uri: string, basicLogin: string, basicPassword: str
       // Attendre que le processus se termine
       return new Promise<void>((resolve) => {
         proc.on('exit', (code) => {
+          isMpvRunning = false;
           executeJavaScript(`window._exited(); console.log("exited with code ${code}");`);
           resolve();
         });
       });
     } catch (error) {
       console.error('Error spawning mpv:', error);
+      return Promise.resolve();
     }
   }
 }
