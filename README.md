@@ -47,14 +47,16 @@ npm run build
 
 Pour publier une nouvelle version et déclencher la mise à jour automatique chez les utilisateurs:
 
-1. Mettez à jour le numéro de version dans `package.json`
-2. Commitez vos changements
-3. Créez un tag git correspondant à la version
-4. Publiez la nouvelle version:
+1. `npm run release` pour créer une nouvelle version
+2. `npm run publish` pour publier la nouvelle version (peut nécessiter les droits admin)
+   nécessite `GH_TOKEN=xxxxx` dans le fichier `.env`
 
-```bash
-npm run publish
-```
+Si besoin de recréer un token : 
+* Va sur GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+* Clique sur "Generate new token (classic)"
+* Donne-lui un nom (ex: electron-builder)
+* Coche la permission `public_repo`
+* Clique "Generate token" et copie-le immédiatement
 
 ## Configuration de l'authentification
 
