@@ -9,7 +9,7 @@
     "build:ts": "npm run copy-html && tsc",
     "watch": "tsc -w",
     "build": "npm run build:ts && electron-builder",
-    "publish": "npm run build:ts && electron-builder -p always",
+    "publish": "npm run build:ts && dotenv -e .env -- electron-builder -p always",
     "release": "npm version patch && git push && git push --tags",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --fix"
   },
@@ -24,6 +24,7 @@
     "@typescript-eslint/eslint-plugin": "^8.32.1",
     "@typescript-eslint/parser": "^8.32.1",
     "copyfiles": "^2.4.1",
+    "dotenv-cli": "^11.0.0",
     "electron": "^36.2.0",
     "electron-builder": "^26.0.15",
     "eslint": "^9.27.0",
