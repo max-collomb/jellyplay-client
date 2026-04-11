@@ -1,4 +1,5 @@
 import * as net from 'net';
+import { ctx } from './context';
 
 export class MpvApi {
   private readonly onPositionChanged: (position: number) => void;
@@ -25,7 +26,7 @@ export class MpvApi {
   public pollPlaybackTime(): void {
     try {
       this.isPolling = true;
-      this.client = net.connect('\\\\.\\pipe\\mpvsocket'); // Pour Windows, on utilise un pipe nommé
+      this.client = net.connect(ctx.mpvIpcSocket);
 
       this.client.on('connect', () => {
         this.timer = setInterval(() => {

@@ -24,13 +24,16 @@ const connectionManager = new ConnectionManager(
   'https://jellyplay.synology.me:37230/frontend/', // publicAddress
 );
 
-if (app.isPackaged) {
-  // In a packaged app, resources are in `process.resourcesPath`. The `extraResources` copies "mpv-binaries/windows-x64" to "resources/windows-x64"
-  ctx.mpvPath = path.join(process.resourcesPath, 'mpv-binaries', 'windows-x64', 'mpv.exe');
+if (process.platform === 'win32') {
+  const mpvDir = app.isPackaged
+    ? path.join(process.resourcesPath, 'mpv-binaries', 'windows-x64')
+    : path.join(path.dirname(__dirname), 'mpv-binaries', 'windows-x64');
+  ctx.mpvPath = path.join(mpvDir, 'mpv.exe');
+  ctx.mpvIpcSocket = '\\\\.\\pipe\\mpvsocket';
 } else {
-  // In development, __dirname is likely .../project_root/dist or .../project_root/src. path.dirname(__dirname) should then be project_root
-  const projectRoot = path.dirname(__dirname);
-  ctx.mpvPath = path.join(projectRoot, 'mpv-binaries', 'windows-x64', 'mpv.exe');
+  // Linux : on utilise le mpv installé sur la machine
+  ctx.mpvPath = 'mpv';
+  ctx.mpvIpcSocket = '/tmp/mpvsocket';
 }
 
 // Créer la fenêtre principale lorsque Electron est prêt

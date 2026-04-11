@@ -28,7 +28,7 @@ export function handleMpvUri(uri: string, basicLogin: string, basicPassword: str
       `--http-header-fields="Authorization: Basic ${Buffer.from(basicLogin + ':' + basicPassword).toString('base64')}"`,
       position > -1 ? `--start=${position}` : '',
       srtUrl ? `--sub-file="${srtUrl}"` : '',
-      '--input-ipc-server=\\\\.\\pipe\\mpvsocket',
+      `--input-ipc-server=${ctx.mpvIpcSocket}`,
     ].filter((arg) => arg !== ''); // Supprimer les arguments vides
 
     executeJavaScript(`console.log(${JSON.stringify(cmd.join(' '))});`);

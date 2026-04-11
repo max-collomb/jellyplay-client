@@ -5,6 +5,7 @@ type Context = {
   windowState: WindowState;
   uploadUrl: string;
   mpvPath: string;
+  mpvIpcSocket: string;
 };
 
 export const ctx: Context = {
@@ -21,4 +22,5 @@ export const ctx: Context = {
   },
   uploadUrl: '',
   mpvPath: '',
+  mpvIpcSocket: '',
 };
