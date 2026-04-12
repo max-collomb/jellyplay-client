@@ -24,6 +24,11 @@ const connectionManager = new ConnectionManager(
   'https://jellyplay.synology.me:37230/frontend/', // publicAddress
 );
 
+// Linux : le chrome-sandbox nécessite des droits SUID root sans cette option
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('no-sandbox');
+}
+
 if (process.platform === 'win32') {
   const mpvDir = app.isPackaged
     ? path.join(process.resourcesPath, 'mpv-binaries', 'windows-x64')

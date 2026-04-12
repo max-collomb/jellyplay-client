@@ -62,9 +62,13 @@
       "perMachine": true
     },
     "linux": {
-      "icon": "assets/icon.png",
+      "icon": "assets/icons",
       "target": "AppImage",
-      "category": "AudioVideo"
+      "category": "AudioVideo",
+      "desktop": {
+        "StartupWMClass": "jellyplay-electron-client"
+      },
+      "executableName": "jellyplay-electron-client"
     }
   }
 }

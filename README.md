@@ -1,4 +1,4 @@
-# My Electron App
+# Jellyplay Client
 
 Une application Electron qui affiche une page web avec authentification HTTP basique et gère des liens spéciaux.
 
@@ -9,63 +9,66 @@ Une application Electron qui affiche une page web avec authentification HTTP bas
 - Mise à jour automatique de l'application
 - Gestion des liens spéciaux commençant par `mpv://`
 
-## Prérequis
-
-- Node.js (v14 ou supérieur)
-- npm ou yarn
-- TypeScript
-
 ## Installation
 
-```bash
-# Cloner le dépôt
-git clone <votre-repo-url>
-cd my-electron-app
+### Windows
 
-# Installer les dépendances
-npm install
+Télécharger et exécuter le fichier `.exe` depuis la [dernière release GitHub](https://github.com/max-collomb/jellyplay-client/releases/latest).
+
+### Linux
+
+Coller la commande suivante dans un terminal :
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/max-collomb/jellyplay-client/master/scripts/install-linux.sh)
 ```
+
+Cette commande :
+- télécharge automatiquement la dernière version
+- installe l'AppImage dans `/opt`
+- crée un raccourci dans le lanceur d'applications (épinglable au dock)
+
+Les mises à jour suivantes sont gérées automatiquement par l'application.
 
 ## Développement
 
+### Prérequis
+
+- Node.js (v20 ou supérieur)
+- npm
+- TypeScript
+
+### Lancer en mode développement
+
 ```bash
+# Cloner le dépôt
+git clone https://github.com/max-collomb/jellyplay-client.git
+cd jellyplay-client
+
+# Installer les dépendances
+npm install
+
 # Lancer l'application
 npm start
 
-# Compiler TypeScript en mode watch (dans un terminal séparé)
+# Ou compiler TypeScript en mode watch (dans un terminal séparé)
 npm run watch
-```
-
-## Construction de l'application
-
-```bash
-# Créer un package pour la plateforme actuelle
-npm run build
 ```
 
 ## Publication d'une mise à jour
 
-Pour publier une nouvelle version et déclencher la mise à jour automatique chez les utilisateurs:
+Pour publier une nouvelle version et déclencher la mise à jour automatique chez les utilisateurs :
 
-1. `npm run release` pour créer une nouvelle version
-2. `npm run publish` pour publier la nouvelle version (peut nécessiter les droits admin)
-   nécessite `GH_TOKEN=xxxxx` dans le fichier `.env`
+1. `npm run release` — incrémente la version, crée un tag git et pousse
+2. `npm run publish` — build et publie sur GitHub Releases
 
-Si besoin de recréer un token : 
-* Va sur GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
-* Clique sur "Generate new token (classic)"
-* Donne-lui un nom (ex: electron-builder)
-* Coche la permission `public_repo`
-* Clique "Generate token" et copie-le immédiatement
+> Nécessite `GH_TOKEN=xxxxx` dans le fichier `.env`.
+> Pour créer un token : GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → cocher `public_repo`.
 
 ## Configuration de l'authentification
 
-Les identifiants par défaut sont:
-- Nom d'utilisateur: `user`
-- Mot de passe: `password`
-
-Pour modifier ces identifiants, modifiez la variable `authConfig` dans `main.js`.
+Les identifiants sont configurables au premier lancement via l'interface de l'application.
 
 ## Gestion des liens mpv://
 
-L'application intercepte les liens commençant par `mpv://` et exécute une action spécifique sans naviguer ailleurs. Pour personnaliser cette action, modifiez la fonction `handleMpvLink` dans `main.js`.
+L'application intercepte les liens commençant par `mpv://` et exécute une action spécifique sans naviguer ailleurs.
