@@ -65,9 +65,6 @@
       "icon": "assets/icons",
       "target": "AppImage",
       "category": "AudioVideo",
-      "desktop": {
-        "StartupWMClass": "jellyplay-electron-client"
-      },
       "executableName": "jellyplay-electron-client"
     }
   }
