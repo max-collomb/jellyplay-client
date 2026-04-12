@@ -62,7 +62,7 @@ cat > '$DESKTOP_FILE' <<EOF
 [Desktop Entry]
 Name=$APP_DISPLAY_NAME
 Comment=Jellyplay Electron Client
-Exec=$APPIMAGE_DEST
+Exec=$APPIMAGE_DEST --no-sandbox
 Icon=$ICON_DEST
 Terminal=false
 Type=Application
