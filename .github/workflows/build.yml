@@ -54,17 +54,28 @@ jobs:
       #  run: npm test
 
       - name: Prepare Windows certificate
+        id: cert
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          $cert = [System.Convert]::FromBase64String("${{ secrets.WINDOWS_CERTS }}")
-          [System.IO.File]::WriteAllBytes("$env:RUNNER_TEMP/certificate.p12", $cert)
+          $b64 = "${{ secrets.WINDOWS_CERTS }}" -replace '\s', ''
+          if ($b64.Length -gt 0) {
+            $bytes = [System.Convert]::FromBase64String($b64)
+            [System.IO.File]::WriteAllBytes("$env:RUNNER_TEMP/certificate.p12", $bytes)
+            "path=$env:RUNNER_TEMP/certificate.p12" >> $env:GITHUB_OUTPUT
+          }
 
-      - name: Build and release Electron app (Windows)
-        if: matrix.os == 'windows-latest'
+      - name: Build and release Electron app (Windows, no signing)
+        if: matrix.os == 'windows-latest' && steps.cert.outputs.path == ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WIN_CSC_LINK: ${{ runner.temp }}/certificate.p12
+        run: npx electron-builder --publish ${{ startsWith(github.ref, 'refs/tags/v') && 'always' || 'never' }}
+
+      - name: Build and release Electron app (Windows, with signing)
+        if: matrix.os == 'windows-latest' && steps.cert.outputs.path != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WIN_CSC_LINK: ${{ steps.cert.outputs.path }}
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERTS_PASSWORD }}
           CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERTS_PASSWORD }}
         run: npx electron-builder --publish ${{ startsWith(github.ref, 'refs/tags/v') && 'always' || 'never' }}
